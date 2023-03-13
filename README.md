@@ -31,6 +31,8 @@ and pass the arguments to the tizen-help script wrapper.
 
 # Usage
 
+The tizen-help wrapper provides the following commands:
+
 - help:        General help for usage of the script.
 
 - syntax:      Example of how to use the tizen and sdb commands for common use cases.
@@ -99,7 +101,7 @@ tizen-help help
       - DISABLE_WEB_SECURITY        Start the browser with web security disabled [ true | false ]
 ```
 
-# Compativility
+# Compatibility
 
 This wrapper is compatible with most bash interpreters including windows (Git bash and WSL).
 
@@ -128,4 +130,4 @@ DISABLE_WEB_SECURITY:       Start the browser with web security disabled "[ true
 
 # Documentation
 
-For more information read the confluence page for [tizen-help](https://accedobroadband.jira.com/wiki/spaces/ATEC/pages/2646573120/Tizen+CLI+helper+tizen-help)
+For more information read the confluence page for [tizen-help](https://accedobroadband.jira.com/wiki/spaces/ATEC/pages/2646573120/Tizen+CLI+helper+tizen-help).
