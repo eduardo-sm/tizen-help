@@ -1,0 +1,510 @@
+#!/usr/bin/env bash
+
+# set -x
+
+# Common chrome/chromium location
+# mac
+#   '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
+#   '/Applications/Chromium.app/Contents/MacOS/Chromium'
+#
+# windows gitbash
+#   '$HOME/AppData/Local/Chromium/Application/chrome.exe'
+#   '/c/Program Files/Google/Chrome/Application/chrome.exe'
+#
+# windows wsl
+#   '/mnt/c/Users/[username]/AppData/Local/Chromium/Application/chrome.exe'
+#   '/mnt/c/Program Files/Google/Chrome/Application/chrome.exe'
+
+# Disable security flags if needed (all flags are required!)
+#   --disable-web-security
+#   --user-data-dir=/tmp/tmp-dev-dir
+#   --disable-site-isolation-trials
+
+# Using linux default
+chromium="${CHROMIUM:-/usr/bin/chromium-browser}"
+device_ip="${SAMSUNG_DEVICE_IP}"
+# Open browser web security disabled
+disable_web_security="${DISABLE_WEB_SECURITY:-false}"
+
+# Device to connect
+device_id=""
+tmp_dir_name="tmp-dev-dir"
+
+# Serial is usually ip + default port
+serial_number="$device_ip:26101"
+
+starting_location="$(pwd)"
+pathid=""
+tizen_tmp=""
+
+# Helper functions
+get_temp_dir () {
+  echo "/tmp/$tmp_dir_name"
+}
+
+handle_wsl_path () {
+  :
+}
+
+is_command () {
+	command -v "$1" &> /dev/null
+}
+
+# Detect windows
+if [[ "$(cat /proc/version 2> /dev/null)" =~ (WSL|Microsoft|microsoft|MSYS|MINGW) ]]; then
+  # It is running on windows
+
+  # Create function to call cmd.exe
+  case $(uname) in 
+    Linux*) # WSL
+      cmd () {
+        cmd.exe /c "$@"
+      }
+
+      arg_in_win_path=true
+
+      if [ -f "$2" ] || [ -d "$2" ]; then
+        arg_in_win_path="$(realpath -e "$2" 2>&1 | grep -Ei "^/mnt" &> /dev/null && echo true || echo false)"
+      fi
+
+      # Do not default to windows temporal directory if a condition is met
+      # - It is using linux tizen and sdb commands (must be in path and no aliases)
+      # - Current working directory and argument path is in the windows filesystem
+      if $(is_command "tizen" && is_command "sdb") || [[ "$starting_location" =~ ^/mnt/* && "$arg_in_win_path" == true ]]; then
+        :
+      else
+        echo ""
+        echo "On WSL path. Defaulting operations to temporal folder of the windows user!"
+        echo ""
+
+        # Create temporal wrappers for tizen and sdb
+        tizen () {
+          cmd tizen "$@"
+        }
+
+        sdb () {
+          cmd sdb "$@"
+        }
+
+        # Set tizen_tmp directory to allow building using windows tizen and sdb commands 
+        # This is a workaround for CMD.exe not supporting UNC paths E.g. "\\wsl.localhost\Ubuntu"
+        # Using pushd/popd workarounds doesn't play very nice for starting processes.
+        handle_wsl_path () {
+          local path="$1"
+          local temp="$(wslpath $(cmd "echo %TEMP%" | sed -e 's/[[:space:]]*$//'))/tizen-help"
+          local base="$(basename "$path")"
+          pathid="$(uuidgen)"
+          tizen_tmp="$temp/$pathid"
+          # Clean temporal directory
+          trap "rm -rf -- '$tizen_tmp' 2> /dev/null" EXIT
+
+          # Cleanup
+          if [ -d "$tizen_tmp" ]; then
+            rm -rf "$tizen_tmp"
+          fi
+
+          if [ -f "$path" ]; then
+            # Copy file
+
+            # Ensure temp directory
+            mkdir -p "$tizen_tmp"
+            cp "$path" "$tizen_tmp"
+          elif [ -d "$path" ]; then
+            # Make and copy dir
+
+            tizen_tmp="$tizen_tmp/$base"
+            mkdir -p "$tizen_tmp"
+            cp -r "$path/"* "$tizen_tmp"
+          fi
+        }
+      fi
+
+      ;;
+    *NT*) # Git bash (MINGW/MSYS)
+      cmd () {
+        cmd.exe //c "$@"
+      }
+
+      # Create temporal wrappers for tizen and sdb
+      tizen () {
+        cmd tizen "$@"
+      }
+
+      sdb () {
+        cmd sdb "$@"
+      }
+      ;;
+  esac
+
+  # Override for windows paths
+  get_temp_dir () {
+    # Handle backslash, scape special characters but allow non escaped spaces and remove trailing blanc characters (\r\n)
+    local tmp="$(printf "%q" $(cmd "echo %TEMP%" | sed 's/\\ / /g' | sed -e 's/[[:space:]]*$//'))"
+    echo "$tmp/$tmp_dir_name"
+  }
+fi
+
+tizen_help () {
+  while IFS= read -r line; do
+		printf "  %s\n" "$line"
+	done <<-EOF
+
+  Tizen helper for CLI use
+
+  Commands:
+    - install       > Install the app provided [wgt-path] in the target tv.
+    - uninstall     > Uninstall the app in the tv. It accepts both [app-id] or [wgt-path].
+    - debug         > Start a debug session of the app that matches the [app-id] or [wgt-path]
+                      If CHROMIUM variable exitst, it will launch it the browser
+                      If DISABLE_WEB_SECURITY is "true", it will use disable-web-security flag.
+    - build         > Builds a tizen project in the specified directory
+                      and outs the results in .buildResult located in the specified directory.
+    - package       > Package a tizen app (wgt) in the directory specified.
+    - connect       > Connect to the TV using the provided IP or the IP in SAMSUNG_DEVICE_IP variable.
+    - disconnect    > Disconnect from the TV using the provided IP or the IP in SAMSUNG_DEVICE_IP variable.
+    - appid         > Show the [app-id] from a given [wgt] file.
+    - info          > Show current value of CHROMIUM and SAMSUNG_DEVICE_IP variables
+                      as well as the result of "tizen version" and "sdb version".
+    - syntax        > Show syntax help of common uses cases of tizen cli.
+    - help          > Prints this message.
+
+	Usage:
+    ${0##*/} install [ wgt-path ]
+    ${0##*/} uninstall [ app-id | wgt-path ]
+    ${0##*/} debug [ app-id | wgt-path ]
+    ${0##*/} build [ path-to-build ]
+    ${0##*/} package [ path-to-package ]
+    ${0##*/} connect [device-ip]
+    ${0##*/} disconnect [device-ip]
+    ${0##*/} appid [ wgt-path ]
+    ${0##*/} info
+    ${0##*/} syntax
+    ${0##*/} help
+
+	Options:
+    -h | --help                   Print this message
+
+  Environment variables:
+    - CHROMIUM                    Path of the browser executable
+    - SAMSUNG_DEVICE_IP           IP Address of the device to connect to
+    - DISABLE_WEB_SECURITY        Start the browser with web security disabled [ true | false ]
+
+EOF
+}
+
+syntax_help () {
+  while IFS= read -r line; do
+		printf "  %s\n" "$line"
+	done <<-EOF
+  Tizen syntax:
+    Build:
+      - tizen build-web -out [out directory] [-- directory path]
+
+    Package:
+      If specific cert required:
+      - tizen security-profiles add -n [profile-name] -a [author.p12 path] -p [password]
+
+      - tizen package -t wgt [-s profile-name] [-- directory path] 
+
+    Connect:
+      - sdb connect [device-ip]
+      - sdb disconnect [device-ip]
+
+    Server:
+      - sdb start-server
+      - sdb kill-server
+
+    Install: (use wgt location)
+      - tizen install -n [wgt-path]
+      - tizen uninstall -p [app-id]
+
+    Debug:
+      - sdb shell 0 debug [app-id]
+      - sdb forward tcp:[port] tcp:[port]
+
+    Restart app (javascript)
+      - tizen.application.launch("[app-id]")
+EOF
+}
+
+open_brwoser () {
+  local url="$1"
+
+  echo ""
+  echo "opening chromium"
+
+  if [ "$disable_web_security" = true ]; then
+    echo ""
+    echo "Starting --disable-web-security session"
+    local temp_dir="$(get_temp_dir)"
+
+    mkdir -p "$temp_dir"
+
+    "$chromium" \
+      --disable-web-security \
+      --user-data-dir="$temp_dir" \
+      --disable-site-isolation-trials \
+      "$url"
+  else
+    "$chromium" "$url"
+  fi
+
+}
+
+tizen_build () {
+  local location="$1"
+  if ! [ -d "$location" ]; then
+    die "Invalid path provided"
+  fi
+
+  if [ -d "$tizen_tmp" ]; then
+    cd "$tizen_tmp"
+    tizen build-web -- . -out .buildResult
+    cd "$starting_location"
+
+    if [ -d "$1/.buildResult" ]; then
+      rm -rf "$1/.buildResult"
+    fi
+
+    cp -r "$tizen_tmp/.buildResult" "$1/.buildResult"
+  else
+    tizen build-web -- "$location" -out .buildResult
+  fi
+}
+
+tizen_package () {
+  local location="$1"
+  if ! [ -d "$location" ]; then
+    die "Invalid path provided"
+  fi
+
+  if [ -d "$tizen_tmp" ]; then
+    cd "$tizen_tmp"
+    tizen package -t wgt -- .
+    cd "$starting_location"
+
+    if [ -f "$1"/*.wgt ]; then
+      rm -rf "$1"/*.wgt
+    fi
+
+    cp "$tizen_tmp/"*.wgt "$1"
+  else
+    tizen package -t wgt -- "$location"
+  fi
+}
+
+show_current () {
+  echo "Environment:"
+  echo "Chromium: $chromium"
+  echo "Device IP: $device_ip"
+  echo "Disable web security: $disable_web_security"
+  echo ""
+  echo "tizen version output:"
+  tizen version
+  echo ""
+  echo "sdb version output:"
+  sdb version
+}
+
+start_connection () {
+  device_ip="${1:-$SAMSUNG_DEVICE_IP}"
+  if [ -z "$device_ip" ]; then
+    die "Cannot proceed without a valid IP"
+  fi
+  echo ""
+  echo Connecting to "$device_ip"...
+  sdb connect $device_ip
+}
+
+close_connection () {
+  device_ip="${1:-$SAMSUNG_DEVICE_IP}"
+  if [ -z "$device_id" ]; then
+    set_device_id
+  fi
+
+  echo ""
+  echo Disconnection from device $device_id at $device_ip...
+  sdb disconnect $device_ip
+}
+
+start_deamon () {
+  echo ""
+  echo Starting sdb server...
+  sdb start-server
+}
+
+end_deamon () {
+  echo ""
+  echo Stopping sdb server...
+  sdb kill-server
+}
+
+set_device_id () {
+  echo ""
+  echo Setting device id
+  device_id=$(sdb devices | awk -v serial="$serial_number" '{ if($1 == serial) { print $3 } }' | tr -d '[:space:]')
+  echo DeviceID: $device_id
+}
+
+# display an error message to stderr (in red)
+err () {
+	printf "\33[2K\r\033[1;31m%s\033[0m\n" "$*" >&2
+}
+
+#display error message and exit
+die () {
+	err "$*"
+	exit 1
+}
+
+get_app_id () {
+  local app_id=''
+
+  # If input provided is a path
+  if [ -f "$1" ] || [[ "$1" =~ .wgt ]]; then
+    app_id="$(unzip -p "$1" config.xml | sed -nr "s/.*tizen:application .*id=\"([a-zA-Z0-9\.]*)\" .*/\1/p")"
+  else
+    app_id="$1"
+  fi
+
+  if [ -z "$app_id" ]; then
+    die "Invalid app id provided"
+    return
+  fi
+
+  echo "$app_id"
+}
+
+show_app_id () {
+  if ! [ -f "$1" ]; then
+    die "Invalid file provided"
+  fi
+
+  local app_id="$(get_app_id $1)"
+
+  if [ -z "$app_id" ]; then
+    die "Unable to get app id"
+  fi
+
+  echo ""
+  echo "The app id of '$1' is: $app_id"
+}
+
+tizen_install () {
+  local file_name="$1"
+  if [ -z "$device_id" ]; then
+    set_device_id
+  fi
+
+  if [ -d "$tizen_tmp" ]; then
+    cd "$tizen_tmp"
+    tizen install -n "$(basename "$file_name")" -t "$device_id"
+    cd "$starting_location"
+  else
+    tizen install -n "$file_name" -t "$device_id"
+  fi
+}
+
+tizen_uninstall () {
+  local app_id="$(get_app_id $1)"
+  if [ -z "$device_id" ]; then
+    set_device_id
+  fi
+
+  echo ""
+  echo "The uninstall command may not work on old devices"
+
+  tizen uninstall -p "$app_id" -t "$device_id"
+}
+
+tizen_debug () {
+  if [ -z "$device_ip" ]; then
+    die "Cannot proceed without a valid IP"
+  fi
+
+  if [ -z "$device_id" ]; then
+    set_device_id
+  fi
+
+  local app_id="$(get_app_id $1)"
+
+  echo ""
+  echo "Start debugging for app id $app_id"
+
+  # Launch sdb debug and capture port
+  local debug_port=$(sdb -s "$serial_number" shell 0 debug "$app_id" | awk '{ print $11 }' | tr -d '[:space:]')
+  local url="http://$device_ip:$debug_port"
+
+  if [ -z "$debug_port" ]; then
+    die "Unable to launch the app $app_id in debug mode. Please verify that the app id is valid."
+  fi
+
+  # Connect tv debug port to pc port
+  sdb -s "$serial_number" forward tcp:$debug_port tcp:$debug_port
+
+  echo ""
+  echo Debug port available on "$url"
+
+  echo ""
+  echo "You can restart your app in the console with:"
+  echo "> tizen.application.launch('$app_id')"
+  echo "NOTE: The function may not work on old devices."
+
+  if [ -f "$chromium" ]; then
+    open_brwoser "$url"
+  fi
+}
+
+if [ -f "$2" ] || [ -d "$2" ]; then
+  handle_wsl_path "$2" 
+fi
+
+case "$1" in
+  connect)
+    start_deamon
+    start_connection "$2"
+    ;;
+  disconnect)
+    if (( $(sdb devices | wc -l) > 2 )); then
+      close_connection "$2"
+    else
+      close_connection "$2"
+      end_deamon
+    fi
+    ;;
+  install)
+    tizen_install "$2"
+    ;;
+  uninstall)
+    tizen_uninstall "$2"
+    ;;
+  debug)
+    start_deamon
+    start_connection
+    tizen_debug "$2"
+    ;;
+  build)
+    tizen_build "$2"
+    ;;
+  package)
+    tizen_package "$2"
+    ;;
+  appid)
+    show_app_id "$2"
+    ;;
+  info)
+    show_current    
+    ;;
+  syntax)
+    syntax_help
+    ;;
+  -h|--help|help)
+    tizen_help
+    ;;
+  *)
+    echo
+    echo "Invalid command argument '${@}'"
+    tizen_help
+    ;;
+esac
+
