@@ -20,6 +20,8 @@
 #   --user-data-dir=/tmp/tmp-dev-dir
 #   --disable-site-isolation-trials
 
+version="1.0.0"
+
 # Using linux default
 chromium="${CHROMIUM:-/usr/bin/chromium-browser}"
 device_ip="${SAMSUNG_DEVICE_IP}"
@@ -147,6 +149,10 @@ if [[ "$(cat /proc/version 2> /dev/null)" =~ (WSL|Microsoft|microsoft|MSYS|MINGW
     echo "$tmp/$tmp_dir_name"
   }
 fi
+
+print_version () {
+  echo "tizen-help - v$version"
+}
 
 tizen_help () {
   while IFS= read -r line; do
@@ -519,6 +525,9 @@ case "$1" in
     ;;
   -h|--help|help)
     tizen_help
+    ;;
+  -v|--version|version)
+    print_version
     ;;
   *)
     echo
