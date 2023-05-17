@@ -9,12 +9,19 @@ debug and package tizen applications (wgt).
 Copy the script `tizen-help` to a directory in your path. A common place is ~/.local/bin:
 
 ```bash
+  # Ensure ~/.local/bin exists
+  mkdir -p ~/.local/bin
+
+  # Copy script to directory
   cp tizen-help ~/.local/bin
 ```
 
 Optionally you can create a simlink to tizen-help with a sorter name like `th`
 
 ```bash
+  cd ~/.local/bin
+
+  # Creates a symlink to call tizen-help as th
   ln -s tizen-help th
 ```
 
@@ -35,6 +42,8 @@ The tizen-help wrapper provides the following commands:
 
 - help:        General help for usage of the script.
 
+- version:     Print tizen-help version.
+
 - syntax:      Example of how to use the tizen and sdb commands for common use cases.
 
 - info:        Print the current value of the environment variables and the result of tizen version and sdb version.
@@ -47,11 +56,11 @@ The tizen-help wrapper provides the following commands:
 
 - package:     Create a WGT file. It will use the default certificate configured in Tizen Studio - Certificate Manager.
 
-- install:     Install a WGT file (Path to file as argument). Requires to be connected to a device.
+- install:     Install a WGT file (Path to file as argument). Requires to be connected to a device. Optional argument device_ip.
 
-- uninstall:   Uninstall a WGT file (Path ro file or appId as argument). Old devices may not support this command.
+- uninstall:   Uninstall a WGT file (Path ro file or appId as argument). Old devices may not support this command. Optional argument device_ip.
 
-- debug:       Launch an application in debug mode. Opens the browser if CHROMIUM environment varibale is set.
+- debug:       Launch an application in debug mode. Opens the browser if CHROMIUM environment varibale is set. Optional argument device_ip.
 
 
 ## Help output
@@ -59,15 +68,20 @@ The tizen-help wrapper provides the following commands:
 
 ```bash
 tizen-help help
+
+Invalid command argument ''
   
-    Tizen helper for CLI use
+    Tizen helper for CLI use - v1.0.0
   
     Commands:
       - install       > Install the app provided [wgt-path] in the target tv.
+                        Optional device-ip to target action.
       - uninstall     > Uninstall the app in the tv. It accepts both [app-id] or [wgt-path].
+                        Optional device-ip to target action.
       - debug         > Start a debug session of the app that matches the [app-id] or [wgt-path]
                         If CHROMIUM variable exitst, it will launch it the browser
                         If DISABLE_WEB_SECURITY is "true", it will use disable-web-security flag.
+                        Optional device-ip to target action.
       - build         > Builds a tizen project in the specified directory
                         and outs the results in .buildResult located in the specified directory.
       - package       > Package a tizen app (wgt) in the directory specified.
@@ -78,11 +92,12 @@ tizen-help help
                         as well as the result of "tizen version" and "sdb version".
       - syntax        > Show syntax help of common uses cases of tizen cli.
       - help          > Prints this message.
+      - version       > Show script version.
   
   Usage:
-      tizen-help install [ wgt-path ]
-      tizen-help uninstall [ app-id | wgt-path ]
-      tizen-help debug [ app-id | wgt-path ]
+      tizen-help install [ wgt-path ] [ device-ip ]
+      tizen-help uninstall [ app-id | wgt-path ] [ device-ip ]
+      tizen-help debug [ app-id | wgt-path ] [ device-ip ]
       tizen-help build [ path-to-build ]
       tizen-help package [ path-to-package ]
       tizen-help connect [device-ip]
@@ -91,14 +106,32 @@ tizen-help help
       tizen-help info
       tizen-help syntax
       tizen-help help
+      tizen-help version
   
   Options:
       -h | --help                   Print this message
+      -v | --version                Print script version
   
     Environment variables:
       - CHROMIUM                    Path of the browser executable
       - SAMSUNG_DEVICE_IP           IP Address of the device to connect to
       - DISABLE_WEB_SECURITY        Start the browser with web security disabled [ true | false ]
+  
+    Examples of use:
+      # Build will always create a .buildResult directory
+      $ tizen-help build ./build
+  
+      # Package your build in a wgt. Current signing profile will be used.
+      $ tizen-help package ./build/.buildResult
+  
+      # Install can accept a second argument to target a device. Overrides SAMSUNG_DEVICE_IP env variable.
+      $ tizen-help install ./build/.buildResult/MY_APP.wgt
+  
+      # Debug can accept a second argument to target a device. Overrides SAMSUNG_DEVICE_IP env variable.
+      $ tizen-help debug ./build/.buildResult/MY_APP.wgt
+  
+      # Uninstall can accept a second argument to target a device. Overrides SAMSUNG_DEVICE_IP env variable.
+      $ tizen-help uninstall ./build/.buildResult/MY_APP.wgt
 ```
 
 # Compatibility
@@ -107,12 +140,9 @@ This wrapper is compatible with most bash interpreters including windows (Git ba
 
 ## Windows Caveats
 
-For Git bash, it will wrap tizen and sdb and use `cmd.exe` to execute them.
+- For Git bash, it will wrap tizen and sdb and use `cmd.exe` to execute them.
 
-On WSL it will use first the native Tizen CLI Tools for Linux if available and then
-fallback to the windows tools. If using the windows tools, the commands will be executed by `cmd.exe`
-and if working in the Linux filesystem, all the operations will be defaulted to the temporal
-directory of the windows user.
+- On WSL it can use either native Tizen CLI Tools for Linux or Tizen CLI Tools for windows. The windows tools will be executed by calling the command using `cmd.exe`. To avoid issues with UNC paths (if usign windows cli) the tizen-help command will process all the commands in a temporal directory of the windows user and copy the results back to the original working directory.
 
 # Dependencies
 
