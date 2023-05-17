@@ -318,6 +318,7 @@ show_current () {
 
 start_connection () {
   device_ip="${1:-$SAMSUNG_DEVICE_IP}"
+
   if [ -z "$device_ip" ]; then
     die "Cannot proceed without a valid IP"
   fi
@@ -331,6 +332,11 @@ start_connection () {
 
 close_connection () {
   device_ip="${1:-$SAMSUNG_DEVICE_IP}"
+
+  if [ -z "$device_ip" ]; then
+    die "Cannot proceed without a valid IP"
+  fi
+
   serial_number="$device_ip:26101"
 
   if [ -z "$device_id" ]; then
