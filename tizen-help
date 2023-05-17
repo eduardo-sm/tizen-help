@@ -50,7 +50,7 @@ handle_wsl_path () {
 }
 
 is_command () {
-	command -v "$1" &> /dev/null
+  command -v "$1" &> /dev/null
 }
 
 is_in_path () {
@@ -159,14 +159,17 @@ tizen_help () {
 		printf "  %s\n" "$line"
 	done <<-EOF
 
-  Tizen helper for CLI use
+  Tizen helper for CLI use - v$version
 
   Commands:
     - install       > Install the app provided [wgt-path] in the target tv.
+                      Optional device-ip to target action.
     - uninstall     > Uninstall the app in the tv. It accepts both [app-id] or [wgt-path].
+                      Optional device-ip to target action.
     - debug         > Start a debug session of the app that matches the [app-id] or [wgt-path]
                       If CHROMIUM variable exitst, it will launch it the browser
                       If DISABLE_WEB_SECURITY is "true", it will use disable-web-security flag.
+                      Optional device-ip to target action.
     - build         > Builds a tizen project in the specified directory
                       and outs the results in .buildResult located in the specified directory.
     - package       > Package a tizen app (wgt) in the directory specified.
@@ -177,11 +180,12 @@ tizen_help () {
                       as well as the result of "tizen version" and "sdb version".
     - syntax        > Show syntax help of common uses cases of tizen cli.
     - help          > Prints this message.
+    - version       > Show script version.
 
 	Usage:
-    ${0##*/} install [ wgt-path ]
-    ${0##*/} uninstall [ app-id | wgt-path ]
-    ${0##*/} debug [ app-id | wgt-path ]
+    ${0##*/} install [ wgt-path ] [ device-ip ]
+    ${0##*/} uninstall [ app-id | wgt-path ] [ device-ip ]
+    ${0##*/} debug [ app-id | wgt-path ] [ device-ip ]
     ${0##*/} build [ path-to-build ]
     ${0##*/} package [ path-to-package ]
     ${0##*/} connect [device-ip]
@@ -190,14 +194,32 @@ tizen_help () {
     ${0##*/} info
     ${0##*/} syntax
     ${0##*/} help
+    ${0##*/} version
 
 	Options:
     -h | --help                   Print this message
+    -v | --version                Print script version
 
   Environment variables:
     - CHROMIUM                    Path of the browser executable
     - SAMSUNG_DEVICE_IP           IP Address of the device to connect to
     - DISABLE_WEB_SECURITY        Start the browser with web security disabled [ true | false ]
+
+  Examples of use:
+    # Build will always create a .buildResult directory
+    $ ${0##*/} build ./build
+
+    # Package your build in a wgt. Current signing profile will be used.
+    $ ${0##*/} package ./build/.buildResult
+
+    # Install can accept a second argument to target a device. Overrides SAMSUNG_DEVICE_IP env variable.
+    $ ${0##*/} install ./build/.buildResult/MY_APP.wgt
+
+    # Debug can accept a second argument to target a device. Overrides SAMSUNG_DEVICE_IP env variable.
+    $ ${0##*/} debug ./build/.buildResult/MY_APP.wgt
+
+    # Uninstall can accept a second argument to target a device. Overrides SAMSUNG_DEVICE_IP env variable.
+    $ ${0##*/} uninstall ./build/.buildResult/MY_APP.wgt
 
 EOF
 }
@@ -207,6 +229,13 @@ syntax_help () {
 		printf "  %s\n" "$line"
 	done <<-EOF
   Tizen syntax:
+
+    Security profiles:
+      Show profiles:
+      - tizen security-profiles list
+      Set a profile:
+      - tizen security-profiles set-active -n [profile-name]
+
     Build:
       - tizen build-web -out [out directory] [-- directory path]
 
@@ -232,7 +261,7 @@ syntax_help () {
       - sdb shell 0 debug [app-id]
       - sdb forward tcp:[port] tcp:[port]
 
-    Restart app (javascript)
+    Restart app (javascript):
       - tizen.application.launch("[app-id]")
 EOF
 }
