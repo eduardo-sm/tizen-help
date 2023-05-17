@@ -4,7 +4,7 @@
   "description": "A wrapper for tizen studio cli tools 'tizen' and 'sdb' for development",
   "main": "tizen-help",
   "scripts": {
-    "version": "npx auto-changelog -p"
+    "version": "./helpers/updateVersion.sh && npx auto-changelog -p && git add CHANGELOG.md"
   },
   "repository": {
     "type": "git",
