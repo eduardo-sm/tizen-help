@@ -331,11 +331,11 @@ start_connection () {
 
 close_connection () {
   device_ip="${1:-$SAMSUNG_DEVICE_IP}"
+  serial_number="$device_ip:26101"
+
   if [ -z "$device_id" ]; then
     set_device_id
   fi
-
-  serial_number="$device_ip:26101"
 
   echo ""
   echo Disconnection from device $device_id at $device_ip...
