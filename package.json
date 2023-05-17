@@ -1,0 +1,24 @@
+{
+  "name": "tizen-help",
+  "version": "1.0.0",
+  "description": "A wrapper for tizen studio cli tools 'tizen' and 'sdb' for development",
+  "main": "tizen-help",
+  "scripts": {
+    "version": "npx auto-changelog -p"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/eduardo-sm/tizen-help.git"
+  },
+  "keywords": [
+    "tizen",
+    "shell",
+    "sdb"
+  ],
+  "author": "Eduardo Sanchez",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/eduardo-sm/tizen-help/issues"
+  },
+  "homepage": "https://github.com/eduardo-sm/tizen-help#readme"
+}
