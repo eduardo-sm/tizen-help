@@ -20,5 +20,10 @@
   "bugs": {
     "url": "https://github.com/eduardo-sm/tizen-help/issues"
   },
-  "homepage": "https://github.com/eduardo-sm/tizen-help#readme"
+  "homepage": "https://github.com/eduardo-sm/tizen-help#readme",
+  "auto-changelog": {
+    "commitLimit": false,
+    "sortCommits": "date-desc",
+    "template": "keepachangelog"
+  }
 }
