@@ -22,7 +22,7 @@
 #   --disable-site-isolation-trials
 
 : :: 'Variable declaration'
-version="1.0.0"
+version="1.0.1"
 
 # Using linux default
 chromium="${CHROMIUM:-/usr/bin/chromium-browser}"
