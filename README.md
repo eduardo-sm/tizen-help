@@ -68,8 +68,6 @@ The tizen-help wrapper provides the following commands:
 
 ```bash
 tizen-help help
-
-Invalid command argument ''
   
     Tizen helper for CLI use - v1.0.0
   
@@ -117,6 +115,10 @@ Invalid command argument ''
       - SAMSUNG_DEVICE_IP           IP Address of the device to connect to
       - DISABLE_WEB_SECURITY        Start the browser with web security disabled [ true | false ]
   
+    Debug errors with the script:
+      > Set a debug environment variable to enable 'set -x' logs
+      $ debug=true tizen-help info
+  
     Examples of use:
       # Build will always create a .buildResult directory
       $ tizen-help build ./build
@@ -132,6 +134,7 @@ Invalid command argument ''
   
       # Uninstall can accept a second argument to target a device. Overrides SAMSUNG_DEVICE_IP env variable.
       $ tizen-help uninstall ./build/.buildResult/MY_APP.wgt
+  
 ```
 
 # Compatibility
