@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
-# set -x
+# Using ':' for visible debug comments
+[[ -v debug ]] && set -x
 
 # Common chrome/chromium location
 # mac
@@ -20,6 +21,7 @@
 #   --user-data-dir=/tmp/tmp-dev-dir
 #   --disable-site-isolation-trials
 
+: :: 'Variable declaration'
 version="1.0.0"
 
 # Using linux default
@@ -46,7 +48,7 @@ get_temp_dir () {
 }
 
 handle_wsl_path () {
-  :
+  : :: 'Empty function'
 }
 
 is_command () {
@@ -74,11 +76,13 @@ if [[ "$(cat /proc/version 2> /dev/null)" =~ (WSL|Microsoft|microsoft|MSYS|MINGW
       echo "WSL Detected. Moving operation to the windows filesystem!"
       echo ""
 
+      : :: 'Creating a wrapper to cmd.exe for WSL'
       cmd () {
         cmd.exe /c "$@"
       }
 
       if ! is_command 'tizen'; then
+        : :: 'Creating a wrapper for tizen command'
         # Create temporal wrapper for tizen
         tizen () {
           cmd tizen "$@"
@@ -86,6 +90,7 @@ if [[ "$(cat /proc/version 2> /dev/null)" =~ (WSL|Microsoft|microsoft|MSYS|MINGW
       fi
 
       if ! is_command 'sdb'; then
+        : :: 'Creating a wrapper for sdb command'
         # Create temporal wrapper for sdb
         sdb () {
           cmd sdb "$@"
@@ -96,6 +101,7 @@ if [[ "$(cat /proc/version 2> /dev/null)" =~ (WSL|Microsoft|microsoft|MSYS|MINGW
       # This is a workaround for CMD.exe not supporting UNC paths E.g. "\\wsl.localhost\Ubuntu"
       # Using pushd/popd workarounds doesn't play very nice for starting processes.
       handle_wsl_path () {
+        : :: 'Handling paths for WSL'
         local path="$1"
         local temp="$(wslpath $(cmd "echo %TEMP%" | sed -e 's/[[:space:]]*$//'))/tizen-help"
         local base="$(basename "$path")"
@@ -112,12 +118,14 @@ if [[ "$(cat /proc/version 2> /dev/null)" =~ (WSL|Microsoft|microsoft|MSYS|MINGW
 
         if [ -f "$path" ]; then
           # Copy file
+          : :: "Target $1 is a file"
 
           # Ensure temp directory
           mkdir -p "$tizen_tmp"
           cp "$path" "$tizen_tmp"
         elif [ -d "$path" ]; then
           # Make and copy dir
+          : :: "Target $1 is a directory"
 
           tizen_tmp="$tizen_tmp/$base"
           mkdir -p "$tizen_tmp"
@@ -127,15 +135,23 @@ if [[ "$(cat /proc/version 2> /dev/null)" =~ (WSL|Microsoft|microsoft|MSYS|MINGW
 
       ;;
     *NT*) # Git bash (MINGW/MSYS)
+      : :: 'Creating a wrapper to cmd.exe for MSYS'
       cmd () {
+        # NOTICE: if automatic path conversion is disabled (variable below)
+        # "MSYS_NO_PATHCONV='1'"
+        # "MSYS2_ARG_CONV_EXCL='*'"
+        # CMD below won't terminate. You need to change '//c' to '/c'
         cmd.exe //c "$@"
       }
 
       # Create temporal wrappers for tizen and sdb
+
+      : :: 'Creating a wrapper for tizen command'
       tizen () {
         cmd tizen "$@"
       }
 
+      : :: 'Creating a wrapper for sdb command'
       sdb () {
         cmd sdb "$@"
       }
@@ -204,6 +220,10 @@ tizen_help () {
     - CHROMIUM                    Path of the browser executable
     - SAMSUNG_DEVICE_IP           IP Address of the device to connect to
     - DISABLE_WEB_SECURITY        Start the browser with web security disabled [ true | false ]
+
+  Debug errors with the script:
+    > Set a debug environment variable to enable 'set -x' logs
+    $ debug=true ${0##*/} info
 
   Examples of use:
     # Build will always create a .buildResult directory
@@ -276,6 +296,8 @@ open_brwoser () {
     echo ""
     echo "Starting --disable-web-security session"
     local temp_dir="$(get_temp_dir)"
+
+    : :: 'Browser session is located in the temporal directory $temp_dir'
 
     mkdir -p "$temp_dir"
 
@@ -508,6 +530,9 @@ tizen_debug () {
 if [ -f "$2" ] || [ -d "$2" ]; then
   handle_wsl_path "$2" 
 fi
+
+: ::: Evaluating args :::
+: :: "$@"
 
 case "$1" in
   connect)
