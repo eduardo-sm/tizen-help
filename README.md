@@ -52,7 +52,7 @@ The tizen-help wrapper provides the following commands:
 
 - disconnect:  Disconnects a device from the sdb deamon. Same arguments as the connect command.
 
-- build:       Call the `tizen build-web` command and put the results in `.buildResults` subdirectory.
+- build:       Call the `tizen build-web` command and put the results in `.buildResult` subdirectory.
 
 - package:     Create a WGT file. It will use the default certificate configured in Tizen Studio - Certificate Manager.
 
@@ -62,14 +62,14 @@ The tizen-help wrapper provides the following commands:
 
 - debug:       Launch an application in debug mode. Opens the browser if CHROMIUM environment varibale is set. Optional argument device_ip.
 
+- profile:     Sets a given profile as the active profile. If no profile is passed, it will open a menu to choose a profile.
 
 ## Help output
 
 
 ```bash
 tizen-help help
-  
-    Tizen helper for CLI use - v1.0.0
+    Tizen helper for CLI use - v1.1.0
   
     Commands:
       - install       > Install the app provided [wgt-path] in the target tv.
@@ -86,6 +86,8 @@ tizen-help help
       - connect       > Connect to the TV using the provided IP or the IP in SAMSUNG_DEVICE_IP variable.
       - disconnect    > Disconnect from the TV using the provided IP or the IP in SAMSUNG_DEVICE_IP variable.
       - appid         > Show the [app-id] from a given [wgt] file.
+      - profile       > Sets a profile for signing. If no profile is provided, a menu will open to choose
+                        from current profiles. If fzf is available, it will be use to display the menu.
       - info          > Show current value of CHROMIUM and SAMSUNG_DEVICE_IP variables
                         as well as the result of "tizen version" and "sdb version".
       - syntax        > Show syntax help of common uses cases of tizen cli.
@@ -101,6 +103,7 @@ tizen-help help
       tizen-help connect [device-ip]
       tizen-help disconnect [device-ip]
       tizen-help appid [ wgt-path ]
+      tizen-help profile [ profile-name ]
       tizen-help info
       tizen-help syntax
       tizen-help help
@@ -136,6 +139,63 @@ tizen-help help
       $ tizen-help uninstall ./build/.buildResult/MY_APP.wgt
   
 ```
+
+## Usage
+
+**NOTE**: No specific IP is required is `SAMSUNG_DEVICE_IP` variable is set.
+
+Build project in the `dest` directory. Output will be placed in `dest/.buildResult`.
+```bash
+$ tizen-help build ./dest
+```
+
+Create a wgt from the the previous build. The name of the wgt depends on config.xml.
+```bash
+$ tizen-help package ./dest/.buildResult
+```
+
+Connect to tv with IP 192.168.1.10
+```bash
+$ tizen-help connect 192.168.1.10
+```
+
+Install wgt to device. 
+```bash
+$ tizen-help install ./dest/.buildResult/MY_APP.wgt
+```
+
+Install wgt to different device with specific IP 192.168.1.45
+```bash
+$ tizen-help install ./dest/.buildResult/MY_APP.wgt 192.168.1.45
+```
+
+Debug app in TV using appId.
+```bash
+$ tizen-help debug abcdefg.MY_APP
+```
+
+Debug app extracting appId from wgt file.
+```bash
+$ tizen-help debug ./dest/.buildResult/MY_APP.wgt
+```
+**NOTE**: Debug command print on the terminal the address to inspect. You need to use a chromium based browser.
+The browser can open automatically if you set the `CHROMIUM` environment variable.
+
+It is also possible to target debug using passing an IP as thrid argument.
+```bash
+$ tizen-help debug ./dest/.buildResult/MY_APP.wgt 192.168.1.45
+```
+
+Uninstall app. It can use either appId or extract it from wgt.
+```bash
+$ tizen-help uninstall ./dest/.buildResult/MY_APP.wgt 192.168.1.45
+```
+
+Disconnect from device. IP can be specified or it will default to `SAMSUNG_DEVICE_IP`.
+```bash
+$ tizen-help disconnect 192.168.1.45
+```
+**NOTE**: If all devices are disconnected, tizen-help will terminate the sdb deamon.
 
 # Compatibility
 
