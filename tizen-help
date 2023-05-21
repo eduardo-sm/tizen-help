@@ -527,6 +527,74 @@ tizen_debug () {
   fi
 }
 
+choose_profile () {
+  local profiles_strs="$(tizen security-profiles list | sed '1d;2d')"
+  # Associative array (key base instead of index)
+  local declare -A profiles=()
+  local count=0
+  local profile=''
+  local selection=''
+
+  while IFS= read -r profile_str; do
+    profile="$(echo "${profile_str/ O}" | sed -E 's/[[:space:]]*$//')"
+    profiles[$count]="$profile"
+
+    # Show currently active profile (Includes a "O" at the end).
+    echo "$count: $profile_str"
+    ((count++))
+  done <<< "$profiles_strs"
+
+  echo "Enter the number of the profile or 'q' to quit:"
+  read -p 'Profile: ' selection
+
+  if [ "$selection" = 'q' ]; then
+    : :: "No profile selected."
+    return
+  fi
+
+  : :: "Selected profile: $selection"
+
+  profile=''
+  profile="${profiles[$selection]}"
+
+  if [ -z "$profile" ]; then
+    die "Selected profile '$selection' is invalid."
+    return 1
+  fi
+
+  tizen security-profiles set-active -n "$profile"
+}
+
+choose_profile_fzf () {
+  local profile="$(tizen security-profiles list | sed '1d;2d' | fzf)"
+  
+  : :: "Selected profile: $profile"
+  if [ -z "$profile" ]; then
+    : :: "No profile selected."
+    return
+  fi
+
+  tizen security-profiles set-active -n "$(echo "${profile/ O}" | sed -E 's/[[:space:]]*$//')"
+}
+
+change_profile () {
+  local profile="$1"
+
+  if [ -n "$profile" ]; then
+    : :: "Setting Profile: $1"
+    tizen security-profiles set-active -n "$profile" 
+    return "$?"
+  fi
+
+  if is_command 'fzf'; then
+    : :: "Using fzf to select profile"
+    choose_profile_fzf
+    return
+  fi
+
+  choose_profile
+}
+
 if [ -f "$2" ] || [ -d "$2" ]; then
   handle_wsl_path "$2" 
 fi
@@ -582,6 +650,9 @@ case "$1" in
     ;;
   syntax)
     syntax_help
+    ;;
+  profile)
+    change_profile "$2"
     ;;
   -h|--help|help)
     tizen_help
