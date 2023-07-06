@@ -158,6 +158,11 @@ Connect to tv with IP 192.168.1.10
 ```bash
 $ tizen-help connect 192.168.1.10
 ```
+Connect to tv using `SAMSUNG_DEVICE_IP` variable
+```bash
+$ export SAMSUNG_DEVICE_IP=192.168.1.10
+$ tizen-help connect # It will use the variable for all commands that require a target
+```
 
 Install wgt to device. 
 ```bash
@@ -178,10 +183,9 @@ Debug app extracting appId from wgt file.
 ```bash
 $ tizen-help debug ./dest/.buildResult/MY_APP.wgt
 ```
-**NOTE**: Debug command print on the terminal the address to inspect. You need to use a chromium based browser.
-The browser can open automatically if you set the `CHROMIUM` environment variable.
+**NOTE**: Debug command prints on screen the address to inspect. You need to use a chromium based browser for debugging. The browser will open automatically if you set the `CHROMIUM` environment variable.
 
-It is also possible to target debug using passing an IP as thrid argument.
+It is possible to target the debug session to a specific device by passing an IP as third argument.
 ```bash
 $ tizen-help debug ./dest/.buildResult/MY_APP.wgt 192.168.1.45
 ```
