@@ -197,6 +197,7 @@ tizen_help () {
     - connect       > Connect to the TV using the provided IP or the IP in SAMSUNG_DEVICE_IP variable.
     - disconnect    > Disconnect from the TV using the provided IP or the IP in SAMSUNG_DEVICE_IP variable.
     - appid         > Show the [app-id] from a given [wgt] file.
+    - repackage     > Unpack and repack a wgt using the active signing profile.
     - profile       > Sets a profile for signing. If no profile is provided, a menu will open to choose
                       from current profiles. If fzf is available, it will be use to display the menu.
     - info          > Show current value of CHROMIUM and SAMSUNG_DEVICE_IP variables
@@ -214,6 +215,7 @@ tizen_help () {
     ${0##*/} connect [device-ip]
     ${0##*/} disconnect [device-ip]
     ${0##*/} appid [ wgt-path ]
+    ${0##*/} repackage [ wgt-path ]
     ${0##*/} profile [ profile-name ]
     ${0##*/} info
     ${0##*/} syntax
