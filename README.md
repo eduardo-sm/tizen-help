@@ -69,7 +69,8 @@ The tizen-help wrapper provides the following commands:
 
 ```bash
 tizen-help help
-    Tizen helper for CLI use - v1.1.0
+
+    Tizen helper for CLI use - v1.2.0
   
     Commands:
       - install       > Install the app provided [wgt-path] in the target tv.
@@ -86,6 +87,7 @@ tizen-help help
       - connect       > Connect to the TV using the provided IP or the IP in SAMSUNG_DEVICE_IP variable.
       - disconnect    > Disconnect from the TV using the provided IP or the IP in SAMSUNG_DEVICE_IP variable.
       - appid         > Show the [app-id] from a given [wgt] file.
+      - repackage     > Unpack and repack a wgt using the active signing profile.
       - profile       > Sets a profile for signing. If no profile is provided, a menu will open to choose
                         from current profiles. If fzf is available, it will be use to display the menu.
       - info          > Show current value of CHROMIUM and SAMSUNG_DEVICE_IP variables
@@ -103,6 +105,7 @@ tizen-help help
       tizen-help connect [device-ip]
       tizen-help disconnect [device-ip]
       tizen-help appid [ wgt-path ]
+      tizen-help repackage [ wgt-path ]
       tizen-help profile [ profile-name ]
       tizen-help info
       tizen-help syntax
@@ -137,7 +140,6 @@ tizen-help help
   
       # Uninstall can accept a second argument to target a device. Overrides SAMSUNG_DEVICE_IP env variable.
       $ tizen-help uninstall ./build/.buildResult/MY_APP.wgt
-  
 ```
 
 ## Usage
