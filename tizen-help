@@ -135,6 +135,11 @@ if [[ "$(cat /proc/version 2> /dev/null)" =~ (WSL|Microsoft|microsoft|MSYS|MINGW
 
       ;;
     *NT*) # Git bash (MINGW/MSYS)
+      : :: 'Add uuidgen function for MINGW/MSYS'
+      uuidgen () {
+        od -x /dev/urandom | head -1 | awk '{OFS="-"; print $2$3,$4,$5,$6,$7$8$9}'
+      }
+
       : :: 'Creating a wrapper to cmd.exe for MSYS'
       cmd () {
         # NOTICE: if automatic path conversion is disabled (variable below)
@@ -355,6 +360,34 @@ tizen_package () {
   else
     tizen package -t wgt -- "$location"
   fi
+}
+
+tizen_repackage () {
+  local location="$1"
+
+  : :: "Repackage file location: $location"
+  if ! [ -f "$location" ]; then
+    die "Input is not a valid file"
+  fi
+
+  : :: "Prepare temporal location"
+  tizen_tmp="${tizen_tmp:-$(mktemp -d)}"
+  local temp_unzip_dir="$tizen_tmp/repackage"
+  trap "rm -rf -- '$temp_unzip_dir' &> /dev/null" EXIT
+
+  : :: "Unzip original build"
+  unzip "$location" -d "$temp_unzip_dir"
+
+  : :: "Make new signed build"
+  cd "$temp_unzip_dir"
+  tizen package -t wgt -- .
+
+  local repacked_file="${1%.*}.repacked.wgt"
+
+  : :: "Go back to starting location"
+  cd "$starting_location"
+  : :: "Copy new file $repacked_file"
+  cp "$temp_unzip_dir/"*.wgt "$repacked_file"
 }
 
 show_current () {
@@ -656,6 +689,9 @@ case "$1" in
     ;;
   profile)
     change_profile "$2"
+    ;;
+  repackage)
+    tizen_repackage "$2"
     ;;
   -h|--help|help)
     tizen_help
