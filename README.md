@@ -227,6 +227,3 @@ SAMSUNG_DEVICE_IP:          IP Address of the device to connect to. E.g. 192.168
 
 DISABLE_WEB_SECURITY:       Start the browser with web security disabled "[ true | false or anything else ]" (Chromium based browsers only).
 
-# Documentation
-
-For more information read the confluence page for [tizen-help](https://accedobroadband.jira.com/wiki/spaces/ATEC/pages/2646573120/Tizen+CLI+helper+tizen-help).
