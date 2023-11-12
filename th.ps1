@@ -34,7 +34,7 @@ $WEB_SECURITY = $env:DISABLE_WEB_SECURITY
 $GITBASH_ENVIRONMENT = @(
   # Enable MINGW work as running gitbash directly
   "MSYS='enable_pcon'"
-  "MSYSTEM='MING64'"
+  "MSYSTEM='MINGW64'"
   "enable_pcon='1'"
   # Avoid POSIX to WINDOWS path conversions
   # "MSYS_NO_PATHCONV='1'"
