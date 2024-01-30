@@ -144,7 +144,8 @@ tizen-help help
 
 ## Usage
 
-**NOTE**: No specific IP is required is `SAMSUNG_DEVICE_IP` variable is set.
+**NOTE**: No specific IP is required if `SAMSUNG_DEVICE_IP` variable is set. If unset, you need to manually pass the **device ip** on each command.
+**NOTE**: On windows from powershell use the command as `th` only or rename the file th.ps1.
 
 Build project in the `dest` directory. Output will be placed in `dest/.buildResult`.
 ```bash
@@ -209,9 +210,12 @@ This wrapper is compatible with most bash interpreters including windows (Git ba
 
 ## Windows Caveats
 
-- For Git bash, it will wrap tizen and sdb and use `cmd.exe` to execute them.
+- For Git bash, it will wrap tizen and sdb commands and it will use `cmd.exe` to execute them.
 
-- On WSL it can use either native Tizen CLI Tools for Linux or Tizen CLI Tools for windows. The windows tools will be executed by calling the command using `cmd.exe`. To avoid issues with UNC paths (if usign windows cli) the tizen-help command will process all the commands in a temporal directory of the windows user and copy the results back to the original working directory.
+- If used from prowershell, the wrapper needs to find `env.exe` executable. You may need to add `C:\Program Files\Git\usr\bin` (or the the path you installed git e.g. GIT_INSTALL_PATH\Gir\usr\bin) to your path.
+  - You can test this by running `where.exe env`. If you don't get an output it means `env.exe` is not in the path.
+
+- On WSL it can use either native Tizen CLI Tools for Linux or Tizen CLI Tools for windows. The windows tools will be executed by calling the command using `cmd.exe`. To avoid issues with UNC paths the tizen-help command will process all the commands in a temporal directory of the windows user and copy the results back to the original working directory.
 
 # Dependencies
 
