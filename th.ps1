@@ -22,7 +22,7 @@ $th_location = "$th_location/tizen-help"
 $th_location = if (Test-Path -Path "$th_location" -ErrorAction SilentlyContinue) { "$th_location" } else { 'tizen-help' }
 
 # Find env in git installation directly
-$__gitenv__ = $(where.exe env | grep 'Git\\usr\\bin\\env')
+$__gitenv__ = $(where.exe env | Select-String 'Git\\usr\\bin\\env')
 # $__gitbash__ = $(where.exe bash | grep 'Git\\usr\\bin\\bash')
 
 $CHROMIUM = if ($env:CHROMIUM) { $env:CHROMIUM } else { "$HOME" + '/AppData/Local/Chromium/Application/chrome.exe' }
