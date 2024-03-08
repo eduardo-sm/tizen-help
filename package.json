@@ -1,6 +1,6 @@
 {
   "name": "tizen-help",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "description": "A wrapper for tizen studio cli tools 'tizen' and 'sdb' for development",
   "main": "tizen-help",
   "scripts": {

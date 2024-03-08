@@ -43,7 +43,7 @@ if ($env:debug) {
 #   --disable-site-isolation-trials
 
 : :: 'Variable declaration'
-$version="1.2.1"
+$version="1.2.3"
 
 # Using windows default
 $chromium = if ($env:CHROMIUM) { $env:CHROMIUM } else { 'C:/Users/eduardo/AppData/Local/Chromium/Application/chrome.exe' }
