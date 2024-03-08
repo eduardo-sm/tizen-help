@@ -24,19 +24,17 @@ if ($env:debug) {
   }
 }
 
-# Common chrome/chromium location
+# Common chrome/chromium location:
 # mac
-#   '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
-#   '/Applications/Chromium.app/Contents/MacOS/Chromium'
+# TODO: Investigate default locations for Powershell on mac
 #
-# windows gitbash
-#   '$HOME/AppData/Local/Chromium/Application/chrome.exe'
-#   '/c/Program Files/Google/Chrome/Application/chrome.exe'
+# windows
+#   '$env:LocalAppData/Chromium/Application/chrome.exe'
+#   'C:/Program Files/Google/Chrome/Application/chrome.exe'
+# linux
 #
-# windows wsl
-#   '/mnt/c/Users/[username]/AppData/Local/Chromium/Application/chrome.exe'
-#   '/mnt/c/Program Files/Google/Chrome/Application/chrome.exe'
-
+# TODO: Investigate default locations for Powershell on linux
+#
 # Disable security flags if needed (all flags are required!)
 #   --disable-web-security
 #   --user-data-dir=/tmp/tmp-dev-dir
@@ -46,7 +44,7 @@ if ($env:debug) {
 $version="1.2.3"
 
 # Using windows default
-$chromium = if ($env:CHROMIUM) { $env:CHROMIUM } else { 'C:/Users/eduardo/AppData/Local/Chromium/Application/chrome.exe' }
+$chromium = if ($env:CHROMIUM) { $env:CHROMIUM } else { "$env:LocalAppData/Chromium/Application/chrome.exe" }
 $device_ip = if ($env:SAMSUNG_DEVICE_IP) { $env:SAMSUNG_DEVICE_IP } else { '' }
 # Open browser web security disabled
 $disable_web_security = $env:DISABLE_WEB_SECURITY -eq 'true'
