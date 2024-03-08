@@ -1,8 +1,99 @@
 #!/usr/bin/env powershell
 
+<#
+.SYNOPSIS
+  Helper script for tizen and sdb command line tools.
+
+.DESCRIPTION
+  The tizen-help is a script that wraps around tizen command (batch script on windows and shell script on mac/linux) and sdb (smart debug bridge).
+  It aims to provide a simpler API for development with Samsung TVs. It also provides nice utility functions like a syntax helper, the avility to repackage a wgt with the current profile, or change signing profile.
+
+.PARAMETER SubCommand
+  Name of the function to call. Sub commands available:
+    - install       > Install the app provided [wgt-path] in the target tv.
+                      Optional device-ip to target action.
+    - uninstall     > Uninstall the app in the tv. It accepts both [app-id] or [wgt-path].
+                      Optional device-ip to target action.
+    - debug         > Start a debug session of the app that matches the [app-id] or [wgt-path]
+                      If CHROMIUM variable exitst, it will launch it the browser
+                      If DISABLE_WEB_SECURITY is "true", it will use disable-web-security flag.
+                      Optional device-ip to target action.
+    - build         > Builds a tizen project in the specified directory
+                      and outs the results in .buildResult located in the specified directory.
+    - package       > Package a tizen app (wgt) in the directory specified.
+    - connect       > Connect to the TV using the provided IP or the IP in SAMSUNG_DEVICE_IP variable.
+    - disconnect    > Disconnect from the TV using the provided IP or the IP in SAMSUNG_DEVICE_IP variable.
+    - appid         > Show the [app-id] from a given [wgt] file.
+    - repackage     > Unpack and repack a wgt using the active signing profile.
+    - profile       > Sets a profile for signing. If no profile is provided, a menu will open to choose
+                      from current profiles. If fzf is available, it will be use to display the menu.
+    - info          > Show current value of CHROMIUM and SAMSUNG_DEVICE_IP variables
+                      as well as the result of "tizen version" and "sdb version".
+    - syntax        > Show syntax help of common uses cases of tizen cli.
+    - help          > Prints this message.
+    - version       > Show script version.
+
+.PARAMETER FilePath
+  Second argument for most functions is the path to directory or a file but this could also be an id. Please check SubCommand for more information.
+
+.PARAMETER ExtraArg
+  Extra argument for some SubCommands. E.g. Calling connect or install will allow you to provide a third argument to target a specific device. Please check SubCommand for more information.
+
+.INPUTS
+  The script does not take inputs from a pipeline.
+
+.OUTPUTS
+  The script returns minimal output that can be piped, although it is not recomended. The script will mostly work with files in the filesystem.
+
+.EXAMPLE
+  tizen-help build ./build
+
+.EXAMPLE
+  tizen-help package ./build/.buildResult
+
+.EXAMPLE
+  tizen-help install ./build/.buildResult/MY_APP.wgt
+
+.EXAMPLE
+  tizen-help install ./build/.buildResult/MY_APP.wgt 192.168.1.100
+
+.EXAMPLE
+  tizen-help debug ./build/.buildResult/MY_APP.wgt
+
+.EXAMPLE
+  tizen-help debug ./build/.buildResult/MY_APP.wgt 192.168.23.17
+
+.EXAMPLE
+  tizen-help uninstall ./build/.buildResult/MY_APP.wgt
+
+.EXAMPLE
+  tizen-help uninstall ./build/.buildResult/MY_APP.wgt 192.168.2.2
+
+.EXAMPLE
+  tizen-help -SubCommand install -PathName ./build/.buildResult/MY_APP.wgt -ExtraArg 172.23.21.8
+
+.EXAMPLE
+  tizen-help -PathName ./build/.buildResult/MY_APP.wgt -SubCommand debug
+
+.NOTES
+  The script can customized with the following environment variables:
+  - SAMSUNG_DEVICE_IP: If provided, it will be the ip used by default when a subcommand requires the ip to the target device.
+  - CHROMIUM: Path to the browser to open the debugger. It is used only for the subcommand 'debug'. If not provided, a debug session will still be created but you will need to manually open the debug server in your chromium based browser manually. 
+  - DISABLE_WEB_SECURITY: If set to 'true', the debug session will be created using the disable web security flags. This may be useful for development.
+  - DEBUG: If set to 'true', the script will run with "Set-PSDebug -Trace 1" which will allow to thoubleshoot issues.
+
+  Additionally, you need to make sure that both tizen and sdb commands are installed and available in your path.
+
+  You can check this by running `tizen-help info`. The script will output the available information.
+
+#>
+
 Param (
+  # Function to call from the script
   [String] $SubCommand = '',
+  # Argument needed for some subcommands like a path to a file or directory or an id.
   [String] $FilePath = '',
+  # Additional argument to customize the functionality of some subcommands
   [String] $ExtraArg = ''
 )
 
@@ -150,24 +241,24 @@ function tizen_help () {
     - DISABLE_WEB_SECURITY        Start the browser with web security disabled [ true | false ]
 
   Debug errors with the script:
-    > Set a debug environment variable to enable 'set -x' logs
-    $ debug=true ${name} info
+    > Set a debug environment variable to enable 'Set-PSDebug' logs
+    > `$env:debug = true && ${name} info
 
   Examples of use:
     # Build will always create a .buildResult directory
-    $ ${name} build ./build
+    > ${name} build ./build
 
     # Package your build in a wgt. Current signing profile will be used.
-    $ ${name} package ./build/.buildResult
+    > ${name} package ./build/.buildResult
 
     # Install can accept a second argument to target a device. Overrides SAMSUNG_DEVICE_IP env variable.
-    $ ${name} install ./build/.buildResult/MY_APP.wgt
+    > ${name} install ./build/.buildResult/MY_APP.wgt
 
     # Debug can accept a second argument to target a device. Overrides SAMSUNG_DEVICE_IP env variable.
-    $ ${name} debug ./build/.buildResult/MY_APP.wgt
+    > ${name} debug ./build/.buildResult/MY_APP.wgt
 
     # Uninstall can accept a second argument to target a device. Overrides SAMSUNG_DEVICE_IP env variable.
-    $ ${name} uninstall ./build/.buildResult/MY_APP.wgt
+    > ${name} uninstall ./build/.buildResult/MY_APP.wgt
 "@
 }
 
