@@ -86,6 +86,8 @@
 
   You can check this by running `tizen-help info`. The script will output the available information.
 
+.LINK
+  https://github.com/eduardo-sm/tizen-help
 #>
 
 Param (
