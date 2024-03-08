@@ -43,7 +43,7 @@ pathid=""
 tizen_tmp=""
 
 # Helper functions
-get_temp_dir () {
+get_temp_debug_dir () {
   echo "/tmp/$tmp_dir_name"
 }
 
@@ -55,16 +55,16 @@ is_command () {
   command -v "$1" &> /dev/null
 }
 
-is_in_path () {
-  type -P "$1" &> /dev/null
-}
+# is_in_path () {
+#   type -P "$1" &> /dev/null
+# }
 
 # Detect windows
 if [[ "$(cat /proc/version 2> /dev/null)" =~ (WSL|Microsoft|microsoft|MSYS|MINGW) ]]; then
   # It is running on windows
 
   # Create function to call cmd.exe
-  case $(uname) in 
+  case $(uname) in
     Linux*) # WSL
 
       # If using WSL, the tizen command may be a batch script if running the windows
@@ -164,7 +164,7 @@ if [[ "$(cat /proc/version 2> /dev/null)" =~ (WSL|Microsoft|microsoft|MSYS|MINGW
   esac
 
   # Override for windows paths
-  get_temp_dir () {
+  get_temp_debug_dir () {
     # Handle backslash, scape special characters but allow non escaped spaces and remove trailing blanc characters (\r\n)
     local tmp="$(printf "%q" $(cmd "echo %TEMP%" | sed 's/\\ / /g' | sed -e 's/[[:space:]]*$//'))"
     echo "$tmp/$tmp_dir_name"
@@ -273,7 +273,7 @@ syntax_help () {
       If specific cert required:
       - tizen security-profiles add -n [profile-name] -a [author.p12 path] -p [password]
 
-      - tizen package -t wgt [-s profile-name] [-- directory path] 
+      - tizen package -t wgt [-s profile-name] [-- directory path]
 
     Connect:
       - sdb connect [device-ip]
@@ -305,7 +305,7 @@ open_brwoser () {
   if [ "$disable_web_security" = true ]; then
     echo ""
     echo "Starting --disable-web-security session"
-    local temp_dir="$(get_temp_dir)"
+    local temp_dir="$(get_temp_debug_dir)"
 
     : :: 'Browser session is located in the temporal directory $temp_dir'
 
@@ -605,7 +605,7 @@ choose_profile () {
 
 choose_profile_fzf () {
   local profile="$(tizen security-profiles list | sed '1d;2d' | fzf)"
-  
+
   : :: "Selected profile: $profile"
   if [ -z "$profile" ]; then
     : :: "No profile selected."
@@ -620,7 +620,7 @@ change_profile () {
 
   if [ -n "$profile" ]; then
     : :: "Setting Profile: $1"
-    tizen security-profiles set-active -n "$profile" 
+    tizen security-profiles set-active -n "$profile"
     return "$?"
   fi
 
@@ -634,7 +634,7 @@ change_profile () {
 }
 
 if [ -f "$2" ] || [ -d "$2" ]; then
-  handle_wsl_path "$2" 
+  handle_wsl_path "$2"
 fi
 
 : ::: Evaluating args :::
