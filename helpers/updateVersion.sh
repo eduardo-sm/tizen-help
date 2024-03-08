@@ -11,4 +11,4 @@ sed -r -i'.bak' -e "s/version=\"[0-9]+\.[0-9]+\.[0-9]+\"/version=\"$newVersion\"
 [ -f tizen-help.bak ] && rm tizen-help.bak
 [ -f tizen-help.ps1.bak ] && rm tizen-help.ps1.bak
 
-git add tizen-help
+git add tizen-help tizen-help.ps1
